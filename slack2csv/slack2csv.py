@@ -1,4 +1,8 @@
-import argparse, csv, json, os, urllib.request
+import argparse
+import csv
+import json
+import os
+import urllib.request
 
 parser = argparse.ArgumentParser(description='slack2csv')
 parser.add_argument('--text', help='text to search for', default='')
