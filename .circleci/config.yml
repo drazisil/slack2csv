@@ -44,7 +44,7 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            nose2
+            nose2 --junit-xml
 
       - store_artifacts:
           path: test-reports
