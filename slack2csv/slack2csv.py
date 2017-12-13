@@ -1,49 +1,88 @@
 import argparse
 import csv
+from datetime import datetime
 import json
 import os
-import urllib.request
+import requests
 
-parser = argparse.ArgumentParser(description='slack2csv')
-parser.add_argument('--text', help='text to search for', default='')
-requiredNamed = parser.add_argument_group('required named arguments')
-requiredNamed.add_argument('--token', help='Slack API token', required=True)
-requiredNamed.add_argument('--channel', help='Slack channel id', required=True)
-requiredNamed.add_argument('--filename', help='CSV filename', required=True)
-args = parser.parse_args()
 
-url = "https://slack.com/api/channels.history?token=" + args.token + "&channel=" + args.channel + "&count=100&latest=0"
-response = urllib.request.urlopen(url)
+def fetch_from_slack(token, channel, last):
+    results = []
 
-channel_parsed = json.loads(response.read())
+    r = requests.get("https://slack.com/api/channels.history?token=" +
+                     token + "&channel=" + channel + "&count=100&latest=0")
 
-message_data = channel_parsed['messages']
+    channel_parsed = r.json()
 
-# open a file for writing
+    message_data = channel_parsed['messages']
 
-csv_file = open(args.filename, 'w')
+    if len(results) == 0:
+        results = message_data
+    else:
+        results.append(message_data)
 
-# create the csv writer object
+    return results
 
-csvwriter = csv.writer(csv_file)
 
-count = 0
+def main():
 
-for msg in message_data:
+    parser = argparse.ArgumentParser(description='slack2csv')
+    parser.add_argument('--text', help='text to search for', default='')
+    parser.add_argument('--last', help='unix timestamp to go back', default='')
+    requiredNamed = parser.add_argument_group('required named arguments')
+    requiredNamed.add_argument(
+        '--token', help='Slack API token', required=True)
+    requiredNamed.add_argument(
+        '--channel', help='Slack channel id', required=True)
+    requiredNamed.add_argument(
+        '--filename', help='CSV filename', required=True)
+    args = parser.parse_args()
 
-      if count == 0:
+    messages = fetch_from_slack(args.token, args.channel, args.last)
 
-             header = msg.keys()
+    # open a file for writing
 
-             csvwriter.writerow(header)
+    csv_file = open(args.filename, 'w')
 
-             count += 1
+    # create the csv writer object
 
-      msgText = str(msg['text'])
-      msgUser = str(msg['user'])
+    csvwriter = csv.writer(csv_file)
 
-      if msgText.find(args.text) == 0:
+    count = 0
 
-              csvwriter.writerow(msg.values())
+    for msg in messages:
 
-csv_file.close()
+        msgText = msg.get('text')
+
+        if msg.get('subtype') != 'bot_message':
+            msgUser = msg.get('user')
+
+            msg.setdefault('subtype', '')
+
+            if msgUser != None and msgText.find(args.text) == 0:
+
+                # Write the header if first row
+                if count == 0:
+
+                    header = msg.keys()
+
+                    del msg['subtype']
+
+                    csvwriter.writerow(header)
+
+                    count += 1
+
+                last_timestamp = datetime.fromtimestamp(
+                    int(msg.get('ts').split('.')[0]))
+
+                # write the csv row
+                csvwriter.writerow(msg.values())
+
+    print('Last timestamp: ', last_timestamp)
+
+    csv_file.close()
+
+
+if __name__ == "__main__":
+    # execute only if run as a script
+    main()
