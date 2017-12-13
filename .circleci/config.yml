@@ -13,6 +13,10 @@ jobs:
     steps:
       - checkout
 
+      - run:
+          name: Install pipenv
+          command: pip install pipenv
+
       # Download and cache dependencies
       - restore_cache:
           keys:
@@ -22,8 +26,7 @@ jobs:
 
       - run:
           name: install dependencies
-          command: |
-            pipenv install
+          command: pipenv install
 
       - save_cache:
           paths:
