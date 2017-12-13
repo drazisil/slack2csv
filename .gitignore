@@ -1,1 +1,3 @@
 *.csv
+*.pyc
+test-reports
