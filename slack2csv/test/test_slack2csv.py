@@ -10,8 +10,10 @@ from slack2csv.slack2csv import fetch_from_slack
 @patch('slack2csv.slack2csv.requests.get')
 def test_fetch_from_slack(mock_get):
     true = 1
+    false = 0
     fake_response = {
         "ok": true,
+        "has_more": false,
         "messages": [{
             "type": "message",
             "user": "U0012345",
