@@ -1,25 +1,32 @@
 import argparse
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 import requests
 
 
-def fetch_from_slack(token, channel, last):
+def fetch_from_slack(token, channel, offset):
     results = []
+    newest_timestamp = offset
+    more_results = True
 
-    r = requests.get("https://slack.com/api/channels.history?token=" +
-                     token + "&channel=" + channel + "&count=100&latest=0")
+    while more_results == True:
+        r = requests.get("https://slack.com/api/channels.history?token=" +
+                         token + "&channel=" + channel + "&count=100&inclusive=true&oldest=" + newest_timestamp)
 
-    channel_parsed = r.json()
+        channel_parsed = r.json()
 
-    message_data = channel_parsed['messages']
+        more_results = channel_parsed['has_more']
 
-    if len(results) == 0:
-        results = message_data
-    else:
-        results.append(message_data)
+        message_data = channel_parsed['messages']
+
+        if len(results) == 0:
+            results = message_data
+        else:
+            results = results + message_data
+
+        newest_timestamp = message_data[0].get('ts').split('.')[0]
 
     return results
 
@@ -28,7 +35,8 @@ def main():
 
     parser = argparse.ArgumentParser(description='slack2csv')
     parser.add_argument('--text', help='text to search for', default='')
-    parser.add_argument('--last', help='unix timestamp to go back', default='')
+    parser.add_argument(
+        '--past_days', help='days to go back', default='1')
     requiredNamed = parser.add_argument_group('required named arguments')
     requiredNamed.add_argument(
         '--token', help='Slack API token', required=True)
@@ -38,7 +46,10 @@ def main():
         '--filename', help='CSV filename', required=True)
     args = parser.parse_args()
 
-    messages = fetch_from_slack(args.token, args.channel, args.last)
+    time_diff = str((datetime.now() - timedelta(days=int(args.past_days))
+                     ).timestamp()).split('.')[0]
+
+    messages = fetch_from_slack(args.token, args.channel, time_diff)
 
     # open a file for writing
 
@@ -49,10 +60,14 @@ def main():
     csvwriter = csv.writer(csv_file)
 
     count = 0
+    last_timestamp = 0
 
     for msg in messages:
 
-        msgText = msg.get('text')
+        try:
+            msgText = msg.get('text')
+        except:
+            raise
 
         if msg.get('subtype') != 'bot_message':
             msgUser = msg.get('user')
@@ -77,8 +92,6 @@ def main():
 
                 # write the csv row
                 csvwriter.writerow(msg.values())
-
-    print('Last timestamp: ', last_timestamp)
 
     csv_file.close()
 
