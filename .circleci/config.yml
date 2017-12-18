@@ -3,10 +3,6 @@ version: 2.0
 common: &common
   steps:
     - checkout
-    - restore_cache:
-        keys:
-          - v1-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Pipfile.lock" }}-{{ checksum "tox.ini" }}
-          - v1-deps-
     - run:
         name: Install pipenv
         command: sudo pip install pipenv
@@ -20,14 +16,6 @@ common: &common
     - run:
         name: run tox
         command: tox
-
-    - save_cache:
-        paths:
-          - .tox
-          - ~/.cache/pip
-          - ~/.local
-        key: v1-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "Pipfile.lock" }}-{{ checksum "tox.ini" }}
-
     - store_artifacts:
           path: test-reports
           destination: test-reports
