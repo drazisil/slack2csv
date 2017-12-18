@@ -26,7 +26,7 @@ jobs:
 
       - run:
           name: install dependencies
-          command: pipenv install
+          command: pipenv install --two
 
       - save_cache:
           paths:
@@ -73,7 +73,7 @@ jobs:
 
       - run:
           name: install dependencies
-          command: pipenv install
+          command: pipenv install --three
 
       - save_cache:
           paths:
