@@ -12,7 +12,7 @@ common: &common
         command: sudo pip install pipenv
     - run:
         name: install tox
-        command: sudo pip install --user tox
+        command: sudo pip install tox
     - run:
         name: install dependencies
         command: |
