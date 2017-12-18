@@ -40,18 +40,18 @@ common: &common
           path: test-reports
 
 jobs:
-  py26:
-    <<: *common
-    docker:
-      - image: circleci/python:2.6
-        environment:
-          TOXENV=py26
   py27:
     <<: *common
     docker:
       - image: circleci/python:2.7
         environment:
           TOXENV=py27
+  py35:
+    <<: *common
+    docker:
+      - image: circleci/python:3.5
+        environment:
+          TOXENV=py35
   py36:
     <<: *common
     docker:
@@ -64,6 +64,6 @@ workflows:
   version: 2
   test:
     jobs:
-      - py26
       - py27
+      - py35
       - py36
