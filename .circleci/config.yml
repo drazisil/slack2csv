@@ -13,7 +13,6 @@ common: &common
         name: install dependencies
         command: |
           pipenv install
-          if [ "$TOXENV" = "py27" ]; then pip install mock; fi
     - run:
         name: run tox
         command: tox
