@@ -1,109 +1,69 @@
-# Python CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-python/ for more details
-#
-version: 2
+version: 2.0
+
+common: &common
+  steps:
+    - checkout
+    - restore_cache:
+        keys:
+          - v1-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "pipfile.lock" }}-{{ checksum "tox.ini" }}
+          - v1-deps-
+    - run:
+        name: Install pipenv
+        command: sudo pip install pipenv
+    - run:
+        name: install tox
+        command: sudo pip install --user tox
+    - run:
+        name: install dependencies
+        command: |
+          pipenv install
+    - run:
+        name: run tox
+        command: ~/.local/bin/tox
+
+    - save_cache:
+        paths:
+          - .tox
+          - ~/.cache/pip
+          - ~/.local
+        key: v1-deps-{{ .Environment.CIRCLE_JOB }}-{{ checksum "pipfile.lock" }}-{{ checksum "tox.ini" }}
+
+    - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+    - store_artifacts:
+          path: htmlcov
+          destination: coverage
+
+    - store_test_results:
+          path: test-reports
+
 jobs:
-  test_python27:
+  py26:
+    <<: *common
     docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+      - image: circleci/python:2.6
+        environment:
+          TOXENV=py26
+  py27:
+    <<: *common
+    docker:
       - image: circleci/python:2.7
-
-    steps:
-      - checkout
-
-      - run:
-          name: Install pipenv
-          command: sudo pip install pipenv
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "Pipfile.lock" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run:
-          name: install dependencies
-          command: |
-            pipenv install
-
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "Pipfile.lock" }}
-        
-      # run tests!
-      - run:
-          name: run tests
-          command: |
-            mkdir -p test-reports/junit
-            pipenv run pytest --junitxml=test-reports/junit/test-results.xml --cov-report html --cov slack2csv --verbose
-
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
-
-      - store_artifacts:
-          path: htmlcov
-          destination: coverage
-
-      - store_test_results:
-          path: test-reports
-
-  test_python36:
+        environment:
+          TOXENV=py27
+  py36:
+    <<: *common
     docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.6
+        environment:
+          TOXENV=py36
 
-    steps:
-      - checkout
-
-      - run:
-          name: Install pipenv
-          command: sudo pip install pipenv
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "Pipfile.lock" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run:
-          name: install dependencies
-          command: pipenv install
-
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "Pipfile.lock" }}
-        
-      # run tests!
-      - run:
-          name: run tests
-          command: |
-            mkdir -p test-reports/junit
-            pipenv run pytest --junitxml=test-reports/junit/test-results.xml --cov-report html --cov slack2csv --verbose
-
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
-
-      - store_artifacts:
-          path: htmlcov
-          destination: coverage
-
-      - store_test_results:
-          path: test-reports
-          
 
 workflows:
   version: 2
-  build_and_test:
+  test:
     jobs:
-      - test_python26
-      - test_python27
-      - test_python36
+      - py26
+      - py27
+      - py36
