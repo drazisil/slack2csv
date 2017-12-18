@@ -12,6 +12,7 @@ requests = "*"
 "progressbar2" = "*"
 progress = "*"
 pytest-cov = "*"
+twine = "*"
 
 
 [dev-packages]

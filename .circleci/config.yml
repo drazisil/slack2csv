@@ -26,7 +26,9 @@ jobs:
 
       - run:
           name: install dependencies
-          command: pipenv install --two
+          command: |
+            pipenv install funcsigs
+            pipenv install
 
       - save_cache:
           paths:
@@ -73,7 +75,7 @@ jobs:
 
       - run:
           name: install dependencies
-          command: pipenv install --three
+          command: pipenv install
 
       - save_cache:
           paths:
