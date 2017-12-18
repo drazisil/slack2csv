@@ -13,6 +13,7 @@ requests = "*"
 progress = "*"
 pytest-cov = "*"
 twine = "*"
+funcsigs = "*"
 
 
 [dev-packages]

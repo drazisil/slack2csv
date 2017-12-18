@@ -23,21 +23,24 @@ jobs:
           - v1-dependencies-{{ checksum "Pipfile.lock" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-        
-      # run tests!
-      - run:
-          name: install dependencies && run tests
-          command: |
-            mkdir -p test-reports/junit
-            pipenv install
-            pipenv run pytest --junitxml=test-reports/junit/test-results.xml --cov-report html --cov slack2csv --verbose
 
-      
+      - run:
+          name: install dependencies
+          command: |
+            pipenv install
+
       - save_cache:
           paths:
             - ./venv
           key: v1-dependencies-{{ checksum "Pipfile.lock" }}
-          
+        
+      # run tests!
+      - run:
+          name: run tests
+          command: |
+            mkdir -p test-reports/junit
+            pipenv run pytest --junitxml=test-reports/junit/test-results.xml --cov-report html --cov slack2csv --verbose
+
       - store_artifacts:
           path: test-reports
           destination: test-reports
@@ -101,5 +104,6 @@ workflows:
   version: 2
   build_and_test:
     jobs:
+      - test_python26
       - test_python27
       - test_python36
