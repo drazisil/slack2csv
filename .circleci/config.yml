@@ -34,6 +34,9 @@ jobs:
       - image: circleci/python:2.7
         environment:
           TOXENV=py27
+    - run:
+        name: Install mock backport
+        command: sudo pip install backports.unittest_mock
   py35:
     <<: *common
     docker:
