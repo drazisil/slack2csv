@@ -20,6 +20,6 @@ optional arguments:
 
 required named arguments:
   --token TOKEN         Slack API token
-  --channel CHANNEL     Slack channel id
+  --channel CHANNEL     Slack channel id or name
   --filename FILENAME   CSV filename
 ```

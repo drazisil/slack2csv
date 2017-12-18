@@ -9,6 +9,9 @@ name = "pypi"
 
 pytest = "==3.3.1"
 requests = "*"
+"progressbar2" = "*"
+progress = "*"
+pytest-cov = "*"
 
 
 [dev-packages]
