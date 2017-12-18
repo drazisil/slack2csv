@@ -10,9 +10,6 @@ common: &common
         name: install tox
         command: sudo pip install tox
     - run:
-        name: Install mock backport
-        command: sudo pip install backports.unittest_mock
-    - run:
         name: install dependencies
         command: |
           pipenv install
