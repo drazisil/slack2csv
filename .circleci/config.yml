@@ -4,6 +4,56 @@
 #
 version: 2
 jobs:
+  test_python26:
+    docker:
+      # specify the version you desire here
+      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+      - image: circleci/python:2.6
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install pipenv
+          command: sudo pip install pipenv
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "Pipfile.lock" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            pipenv install
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "Pipfile.lock" }}
+        
+      # run tests!
+      - run:
+          name: run tests
+          command: |
+            mkdir -p test-reports/junit
+            pipenv run pytest --junitxml=test-reports/junit/test-results.xml --cov-report html --cov slack2csv --verbose
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+      - store_artifacts:
+          path: htmlcov
+          destination: coverage
+
+      - store_test_results:
+          path: test-reports
+
+
+
   test_python27:
     docker:
       # specify the version you desire here
@@ -27,7 +77,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            pipenv run pipenv install
+            pipenv install
 
       - save_cache:
           paths:
@@ -104,5 +154,6 @@ workflows:
   version: 2
   build_and_test:
     jobs:
+      - test_python26
       - test_python27
       - test_python36
