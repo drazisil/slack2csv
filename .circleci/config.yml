@@ -10,13 +10,10 @@ common: &common
         name: install tox
         command: sudo pip install tox
     - run:
-        name: install mock for python 2.x
-        command: if [ "$TOXENV" = "py27" ]; then sudo pip install mock; fi
-
-    - run:
         name: install dependencies
         command: |
           pipenv install
+          if [ "$TOXENV" = "py27" ]; then pip install mock; fi
     - run:
         name: run tox
         command: tox
