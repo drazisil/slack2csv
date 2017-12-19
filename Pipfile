@@ -19,8 +19,3 @@ funcsigs = "*"
 [dev-packages]
 
 pytest = "*"
-
-[dev27-packages]
-
-pytest = "*"
-mock = "*"
