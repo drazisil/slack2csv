@@ -1,6 +1,6 @@
 # Standard library imports...
 import pytest
-from unittest.mock import Mock, patch
+from mock import Mock, patch
 
 # Local imports...
 from slack2csv.slack2csv import fetch_from_slack, lookup_channel_id_by_name
