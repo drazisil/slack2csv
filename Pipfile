@@ -14,8 +14,10 @@ progress = "*"
 pytest-cov = "*"
 twine = "*"
 funcsigs = "*"
+mock = "*"
 
 
 [dev-packages]
 
 pytest = "*"
+mock = "*"
