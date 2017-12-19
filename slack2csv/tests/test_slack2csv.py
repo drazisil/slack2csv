@@ -1,7 +1,7 @@
 # Standard library imports...
 from os import environ
 import pytest
-if environ.get('TOXENV') = "py27":
+if environ.get("TOXENV") == "py27":
     from mock import Mock, patch
 else:
     from unittest.mock import Mock, patch
