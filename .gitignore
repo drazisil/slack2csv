@@ -8,5 +8,5 @@ htmlcov
 .tox
 dist
 slack2csv.egg-info
-*pycache*
+__pycache__/*
 htmlcov
