@@ -6,3 +6,5 @@ test-reports
 .coverage
 htmlcov
 .tox
+dist
+slack2csv.egg-info
