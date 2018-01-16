@@ -29,3 +29,4 @@ Usage
 .. |CircleCI| image:: https://circleci.com/gh/drazisil/slack2csv.svg?style=shield
    :target: https://circleci.com/gh/drazisil/slack2csv
 
+I'm a test
