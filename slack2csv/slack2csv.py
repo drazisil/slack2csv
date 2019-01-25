@@ -147,6 +147,7 @@ def main():
 
     count = 0
     last_timestamp = 0
+    header = []
 
     for msg in fetch_from_slack(args.token, conversation_id, time_diff):
 
@@ -158,26 +159,25 @@ def main():
         if msg.get('subtype') != 'bot_message':
             msgUser = msg.get('user')
 
-            msg.setdefault('subtype', '')
+            if 'subtype' in msg:
+                del msg['subtype']
 
             if msgUser != None and msgText.find(args.text) == 0:
 
                 # Write the header if first row
                 if count == 0:
-
-                    header = msg.keys()
-
-                    del msg['subtype']
+                    header = sorted(msg.keys())
 
                     csvwriter.writerow(header)
 
                     count += 1
 
                 last_timestamp = datetime.fromtimestamp(
-                    int(msg.get('ts').split('.')[0]))
+                    float(msg.get('ts')))
 
                 # write the csv row
-                csvwriter.writerow(msg.values())
+                row = [msg.get(k) for k in header]
+                csvwriter.writerow(row)
 
     csv_file.close()
 
