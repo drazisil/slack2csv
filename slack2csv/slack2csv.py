@@ -8,15 +8,41 @@ import requests
 import time
 
 
-def lookup_channel_id_by_name(token, channel_name):
-    r = requests.get("https://slack.com/api/channels.list?token=" +
+def lookup_user_id_by_name(token, user_name):
+    r = requests.get("https://slack.com/api/users.list?token=" +
                      token)
 
-    channel_list_parsed = r.json()["channels"]
+    user_list_parsed = r.json()["members"]
 
-    for channel in channel_list_parsed:
-        if channel["name"] == channel_name:
-            return channel["id"]
+    for user in user_list_parsed:
+        if user["name"] == user_name:
+            return user["id"]
+
+    return ""
+
+
+def lookup_channel_id_by_name(token, channel_name, types=None):
+    url = "https://slack.com/api/conversations.list?token=" + token
+    if types is not None:
+        url += "&types=" + types
+    query_url = url
+
+    channel_list_parsed = [None]
+    while len(channel_list_parsed) > 0:
+        r = requests.get(query_url)
+        resp = r.json()
+
+        channel_list_parsed = resp["channels"]
+
+        for channel in channel_list_parsed:
+            if channel_name in channel.get("name", channel.get("user", None)):
+                return channel["id"]
+
+        next_cursor = resp.get("response_metadata", {}).get("next_cursor", None)
+        if next_cursor:
+            query_url = url + "&cursor=" + next_cursor
+        else:
+            break
 
     return ""
 
@@ -31,7 +57,7 @@ def fetch_from_slack(token, channel, offset):
 
     while more_results == True:
         print(str(datetime.fromtimestamp(float(newest_timestamp))))
-        r = requests.get("https://slack.com/api/channels.history?token=" +
+        r = requests.get("https://slack.com/api/conversations.history?token=" +
                          token + "&channel=" + channel + "&count=100&inclusive=true&oldest=" + newest_timestamp)
 
         channel_parsed = r.json()
@@ -44,17 +70,14 @@ def fetch_from_slack(token, channel, offset):
 
         message_data = channel_parsed['messages']
 
-        if len(results) == 0:
-            results = message_data
-        else:
-            results = results + message_data
+        # yield interim results
+        for message in message_data:
+            yield message
 
         newest_timestamp = message_data[0].get('ts')
 
         time.sleep(2)
         spinner.next()
-
-    return results
 
 
 def main():
@@ -67,25 +90,47 @@ def main():
     requiredNamed.add_argument(
         '--token', help='Slack API token', required=True)
     requiredNamed.add_argument(
-        '--channel', help='Slack channel id or name', required=True)
-    requiredNamed.add_argument(
         '--filename', help='CSV filename', required=True)
+    mutuallyExclusiveRequired = parser.add_mutually_exclusive_group(required=True)
+    mutuallyExclusiveRequired.add_argument(
+        '--channel', help='Slack channel id or name')
+    mutuallyExclusiveRequired.add_argument(
+        '--user', help='Slack user id or name')
     args = parser.parse_args()
 
     channel_id = args.channel
+    user_id = args.user
+    conversation_id = None
+    types = "public_channel,private_channel"
+
+    if user_id:
+        types = "im"
+        if not user_id.startswith("U"):
+            id = lookup_user_id_by_name(args.token, args.user)
+            if id == "":
+                print(user_id, " was not found in the Slack user list. Exiting...")
+                return False
+            channel_id = id
+        else:
+            channel_id = user_id
 
     # Check if this is an id or a name
-    if not channel_id.startswith("C"):
-        id = lookup_channel_id_by_name(args.token, args.channel)
-        if id == "":
-            print(channel_id, " was not found in the Slack channel list. Exiting...")
-            return False
-        channel_id = id
+    if channel_id:
+        if not channel_id.startswith("C"):
+            id = lookup_channel_id_by_name(args.token, channel_id, types)
+            if id == "":
+                print(channel_id, " was not found in the Slack channel list. Exiting...")
+                return False
+            conversation_id = id
+        else:
+            conversation_id = channel_id
+
+    if conversation_id is None:
+        print("Could not find a valid conversation id. Exiting...")
+        return False
 
     time_diff = str((datetime.now() - timedelta(days=int(args.past_days))
                      ).timestamp()).split('.')[0]
-
-    messages = fetch_from_slack(args.token, channel_id, time_diff)
 
     # open a file for writing
 
@@ -98,7 +143,7 @@ def main():
     count = 0
     last_timestamp = 0
 
-    for msg in messages:
+    for msg in fetch_from_slack(args.token, conversation_id, time_diff):
 
         try:
             msgText = msg.get('text')
