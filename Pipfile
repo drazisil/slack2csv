@@ -7,7 +7,7 @@ name = "pypi"
 
 [packages]
 
-pytest = "==3.3.1"
+pytest = "==3.10.0"
 requests = "*"
 "progressbar2" = "*"
 progress = "*"
